@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/fairyhunter13/tax-calculator/internal/customhttp"
-
 	"github.com/fairyhunter13/tax-calculator/internal/taxobj"
 	"github.com/labstack/echo"
 	"github.com/microcosm-cc/bluemonday"
 	validator "gopkg.in/go-playground/validator.v9"
+)
+
+var (
+	ErrInvalidInput = echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 )
 
 var (
@@ -44,11 +46,11 @@ func NewTaxObjectHandler(e *echo.Echo, taxObjUcase taxobj.Usecase) {
 func (handler *HTTPTaxObjectHandler) CreateTaxObject(c echo.Context) (err error) {
 	taxObject := taxobj.TaxObject{}
 	if err = c.Bind(&taxObject); err != nil {
-		err = customhttp.ErrInvalidInput
+		err = ErrInvalidInput
 		return
 	}
 	if err = requestValidator.Struct(&taxObject); err != nil {
-		err = customhttp.ErrInvalidInput
+		err = ErrInvalidInput
 		return
 	}
 	taxObject.Name = sanitizer.Sanitize(taxObject.Name)
