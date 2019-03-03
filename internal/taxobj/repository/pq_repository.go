@@ -98,6 +98,7 @@ func (repo *PqRepository) GetAll() (taxObjects []taxobj.TaxObject, err error) {
 
 //Create create a new tax object in the database.
 func (repo *PqRepository) Create(taxObj *taxobj.TaxObject) (err error) {
+	//Lazy init for preparing statement
 	if repo.statement.insert == nil {
 		stmt, err := repo.pool.Prepare(queryInsert)
 		if err != nil {

@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	//ErrInvalidInput defines the error response returned by the handler
+	//if the request is not valid JSON or have any invalid value.
 	ErrInvalidInput = echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
 )
 
