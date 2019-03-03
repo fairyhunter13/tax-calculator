@@ -5,4 +5,5 @@ type Repository interface {
 	GetAll() ([]TaxObject, error)
 	Create(*TaxObject) error
 	Close()
+	Migrate() error
 }
