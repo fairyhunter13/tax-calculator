@@ -31,31 +31,46 @@ const (
 		FROM
 			tax_object
 	`
+	querySelectOne = `
+		SELECT
+			id
+		FROM
+			tax_object
+		LIMIT 1
+	`
+	queryCreateTable = `
+		CREATE TABLE tax_object (
+			id serial PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			tax_code bigint NOT NULL,
+			price double precision NOT NULL
+		)
+	`
 )
 
 //NewPqRepository creates the pq repository for tax object with postgre connection.
-func NewPqRepository(pool *sql.DB) (taxobj.Repository, error) {
-	pqRepository := &PqRepository{
-		pool: pool,
+func NewPqRepository(pool *sql.DB) taxobj.Repository {
+	return &PqRepository{
+		pool:      pool,
+		statement: statement{},
 	}
-	stmt, err := pool.Prepare(queryInsert)
-	if err != nil {
-		return nil, err
-	}
-	pqRepository.statement.insert = stmt
-	stmt, err = pool.Prepare(querySelectAll)
-	if err != nil {
-		return nil, err
-	}
-	pqRepository.statement.selectAll = stmt
-
-	return pqRepository, nil
 }
 
 //GetAll return all tax objects in postgre.
 func (repo *PqRepository) GetAll() (taxObjects []taxobj.TaxObject, err error) {
-	var taxObject taxobj.TaxObject
+	var (
+		taxObject taxobj.TaxObject
+	)
 	taxObjects = make([]taxobj.TaxObject, 0)
+
+	//Lazy init for preparing statement
+	if repo.statement.selectAll == nil {
+		stmt, err := repo.pool.Prepare(querySelectAll)
+		if err != nil {
+			return taxObjects, err
+		}
+		repo.statement.selectAll = stmt
+	}
 
 	rows, err := repo.statement.selectAll.Query()
 	if err != nil {
@@ -83,6 +98,13 @@ func (repo *PqRepository) GetAll() (taxObjects []taxobj.TaxObject, err error) {
 
 //Create create a new tax object in the database.
 func (repo *PqRepository) Create(taxObj *taxobj.TaxObject) (err error) {
+	if repo.statement.insert == nil {
+		stmt, err := repo.pool.Prepare(queryInsert)
+		if err != nil {
+			return err
+		}
+		repo.statement.insert = stmt
+	}
 	row := repo.statement.insert.QueryRow(taxObj.Name, taxObj.TaxCode, taxObj.Price)
 
 	err = row.Scan(
@@ -92,8 +114,24 @@ func (repo *PqRepository) Create(taxObj *taxobj.TaxObject) (err error) {
 	return
 }
 
+//Migrate create the table in the database if it doesn't exist.
+func (repo *PqRepository) Migrate() (err error) {
+	var id int64
+	row := repo.pool.QueryRow(querySelectOne)
+	err = row.Scan(&id)
+	if err == nil || err == sql.ErrNoRows {
+		return nil
+	}
+	_, err = repo.pool.Exec(queryCreateTable)
+	return
+}
+
 //Close close all prepared statements in this repository.
 func (repo *PqRepository) Close() {
-	repo.statement.insert.Close()
-	repo.statement.selectAll.Close()
+	if repo.statement.insert != nil {
+		repo.statement.insert.Close()
+	}
+	if repo.statement.selectAll != nil {
+		repo.statement.selectAll.Close()
+	}
 }

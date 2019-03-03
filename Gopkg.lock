@@ -125,6 +125,14 @@
   revision = "b199fa0642d29caca62b6a99d65cc981ba5edc3b"
   version = "v9.27.0"
 
+[[projects]]
+  digest = "1:d37c61a335d13bc49b3f90e9e13c8686e4548839b69c58549e727afb2245c454"
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c85607071cf08ca1adaf48319cd1aa322e81d8c1"
+  version = "v1.42.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -132,6 +140,7 @@
     "github.com/labstack/echo",
     "github.com/microcosm-cc/bluemonday",
     "gopkg.in/go-playground/validator.v9",
+    "gopkg.in/ini.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
