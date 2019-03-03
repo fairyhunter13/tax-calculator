@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -31,10 +32,7 @@ func main() {
 		log.Fatalf("[App] Failed to parse the config: %s", err)
 	}
 	application.SetConfig(appConfig)
-	err = application.Init()
-	if err != nil {
-		log.Fatalf("[App] Failed to init the application: %s", err)
-	}
+	startConnection(appConfig, application)
 	err = application.Migrate()
 	if err != nil {
 		log.Printf("[App] Failed to migrate the database: %s", err)
@@ -44,4 +42,12 @@ func main() {
 		log.Fatalf("[App] Failed to run the application: %s", err)
 	}
 	log.Printf("[App] Shutting down!")
+}
+
+func startConnection(appConfig *app.Config, application *app.App) {
+	pool, err := sql.Open("postgres", appConfig.Database.ConnectionString)
+	if err != nil {
+		log.Fatalf("[Connection] Failed to connect to the database: %s", err)
+	}
+	application.Init(pool)
 }
