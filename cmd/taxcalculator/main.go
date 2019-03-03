@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	configPath = "../../configs/config.ini"
+	configPath = "/configs/config.ini"
 )
 
 var (
