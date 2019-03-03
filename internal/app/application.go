@@ -68,9 +68,6 @@ func (app *App) Migrate() (err error) {
 //ParseConfig parse config defined in the path to the given struct.
 func (app *App) ParseConfig(configPath string, appConfig *Config) (err error) {
 	err = ini.MapTo(appConfig, configPath)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -81,11 +78,8 @@ func (app *App) SetConfig(config *Config) {
 
 //Init begin the initialization of application.
 //This process initialize all connection, usecase, repositories, config, and etc.
-func (app *App) Init() (err error) {
-	app.pool, err = sql.Open("postgres", app.config.Database.ConnectionString)
-	if err != nil {
-		return
-	}
+func (app *App) Init(pool *sql.DB) {
+	app.pool = pool
 	app.billRepo = billRepository.NewCacheRepository()
 	app.taxRepo = taxRepository.NewPqRepository(app.pool)
 	app.billUcase = billUsecase.NewBillUsecase(app.billRepo, app.taxRepo)
