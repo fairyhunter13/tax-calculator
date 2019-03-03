@@ -20,6 +20,8 @@ func NewBillUsecase(billRepo bill.Repository, taxRepo taxobj.Repository) bill.Us
 }
 
 //LoadData init the cache for the first time start of application.
+//It is useful to store already calculated value in the fly,
+//so the performance is good when fetching all tax object in bill.
 func (ucase *BillUsecase) LoadData() (err error) {
 	taxObjects, err := ucase.taxRepo.GetAll()
 	if err != nil {
