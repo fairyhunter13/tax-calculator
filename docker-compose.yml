@@ -1,0 +1,51 @@
+version: "3"
+services:
+  postgre:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: taxcalculator
+      POSTGRES_USER: taxcalculator
+      POSTGRES_DB: tax-calculator
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgre:/var/lib/postgresql/data"
+  taxcalculator:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgre
+    environment:
+      - POSTGRE_HOST=postgre
+      - POSTGRE_PORT=5432
+  smoketest:
+    build:
+      context: ./
+      dockerfile: ./build/package/smoketest/Dockerfile
+    depends_on:
+      - taxcalculator
+    environment:
+      - SERVICE_HOST=taxcalculator
+      - SERVICE_PORT=9000
+      - SERVICE_ENDPOINT=/bill
+  nginx:
+    build:
+      context: ./
+      dockerfile: ./build/package/nginx/Dockerfile
+    volumes:
+      - "./configs/nginx:/etc/nginx/conf.d"
+      - "./website:/var/www/html/site"
+      - "./api:/var/www/html/api"
+    environment:
+      - SERVICE_HOST=taxcalculator
+      - SERVICE_PORT=9000
+      - SERVICE_ENDPOINT=/bill
+    ports:
+      - "8080:8080"
+      - "443:443"
+volumes:
+  postgre:
