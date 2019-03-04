@@ -35,7 +35,7 @@ func main() {
 	startConnection(appConfig, application)
 	err = application.Migrate()
 	if err != nil {
-		log.Printf("[App] Failed to migrate the database: %s", err)
+		log.Fatalf("[App] Failed to migrate the database: %s", err)
 	}
 	err = application.Run(osSignal)
 	if err != nil {

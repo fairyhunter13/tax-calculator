@@ -1,4 +1,4 @@
-// +build !race
+// +build !smoke,!race
 
 package app
 

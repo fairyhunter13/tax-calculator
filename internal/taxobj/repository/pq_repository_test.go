@@ -350,7 +350,7 @@ func TestNewPqRepository(t *testing.T) {
 	}
 	db, _, err := sqlmock.New()
 	if err != nil {
-		assert.Errorf(t, err, "Error starting the mock: %s", err)
+		t.Fatalf("Error starting the mock: %s", err)
 	}
 	defer db.Close()
 	tests := []struct {

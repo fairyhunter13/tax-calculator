@@ -251,7 +251,7 @@ func TestApp_Close(t *testing.T) {
 			fields: func() fields {
 				db, _, err := sqlmock.New()
 				if err != nil {
-					assert.Errorf(t, err, "Error in starting the mocker", err)
+					t.Fatalf("Error in starting the mocker: %s", err)
 				}
 
 				fields := fields{
