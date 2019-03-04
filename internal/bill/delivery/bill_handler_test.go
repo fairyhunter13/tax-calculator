@@ -37,7 +37,7 @@ func TestHTTPBillHandler_GetBill_EmptyData(t *testing.T) {
 		billResp := BillResponse{}
 		err = json.Unmarshal(rec.Body.Bytes(), &billResp)
 		if err != nil {
-			assert.Errorf(t, err, "Error unmarshaling bill response: %s", err)
+			t.Fatalf("Error unmarshaling bill response: %s", err)
 		}
 		assert.EqualValues(t, billResp, actualResponse)
 	}
@@ -80,7 +80,7 @@ func TestHTTPBillHandler_GetBill_AvailableData(t *testing.T) {
 		billResp := BillResponse{}
 		err = json.Unmarshal(rec.Body.Bytes(), &billResp)
 		if err != nil {
-			assert.Errorf(t, err, "Error unmarshaling bill response: %s", err)
+			t.Fatalf("Error unmarshaling bill response: %s", err)
 		}
 		assert.EqualValues(t, billResp, actualResponse)
 	}
