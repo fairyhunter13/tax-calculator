@@ -1,0 +1,226 @@
+swagger: "2.0"
+schemes:
+  - http
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+basePath: "/v1"
+info:
+  title: "Tax Calculator API"
+  version: "1.0.0"
+  description: >-
+    This is an openapi documentation for tax calculator application.
+    This documentation shows you the clear type of input request and
+    return response.
+  contact:
+    name: fairyhunter13
+    email: fairyhunter13@gmail.com
+  license:
+    name: "MIT License"
+    url: "https://raw.githubusercontent.com/fairyhunter13/tax-calculator/master/LICENSE?token=ALzIswJJKyBGCXHgadTGUQZ_B5-pxrdZks5ciDMuwA%3D%3D"
+tags:
+  - name: bill
+    description: "Bill is the list of calculated value from the tax objects collection"
+  - name: tax
+    description: "Tax object is the definition of user stored data for object of tax"
+externalDocs:
+  url: "https://documenter.getpostman.com/view/3751209/S11LsHwy"
+  description: "Tax Calculator Postman"
+paths:
+  /bill:
+    get:
+      tags:
+        - "bill"
+      operationId: "getBill"
+      summary: "Get Bill"
+      description: >-
+        This operation get all bill data in JSON syntax.
+        This operation will return response of bill regarding to the tax objects that has been created by user.
+      responses:
+        200:
+          description: "Success in getting the bill list"
+          schema:
+            $ref: "#/definitions/BillResponse"
+          examples:
+            application/json:
+              bill:
+                - name: "KFC Burger"
+                  tax_code: 1
+                  type: "Food & Beverage"
+                  refundable: "Yes"
+                  price: 5000
+                  tax: 500
+                  amount: 5500
+              total:
+                price_subtotal: 5000
+                tax_subtotal: 500
+                grand_total: 5500
+
+  /tax:
+    post:
+      tags:
+        - "tax"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "TaxObject that needed to be added to the server."
+          required: true
+          schema:
+            $ref: "#/definitions/TaxObject"
+
+      operationId: "addTax"
+      summary: "Create Tax Object"
+      description: >-
+        This operation make a tax object by sending json request to this endpoint.
+        This operation will return response regarding to the input request and server condition.
+      responses:
+        201:
+          description: "Success creating the tax object"
+          schema:
+            $ref: "#/definitions/TaxObject"
+          examples:
+            application/json:
+              id: 1
+              name: "MACD Fresh Chicken"
+              tax_code: 1
+              price: 20000
+        400:
+          description: "Invalid post request submitted"
+          schema:
+            $ref: "#/responses/GeneralError"
+          examples:
+            application/json:
+              message: "Invalid input"
+        500:
+          description: "Server is experiencing problems"
+          schema:
+            $ref: "#/responses/GeneralError"
+          examples:
+            application/json:
+              message: "Internal Server Error"
+responses:
+  GeneralError:
+    description: "All error syntax that reused accross different type of errors."
+    schema:
+      $ref: "#/definitions/GeneralError"
+    examples:
+      application/json:
+        message: "Internal Server Error"
+definitions:
+  GeneralError:
+    type: object
+    properties:
+      message:
+        type: string
+        title: "message"
+    title: "General Error"
+    example:
+      message: "Internal Server Error"
+  Bill:
+    type: object
+    properties:
+      name:
+        type: string
+        title: "name"
+      tax_code:
+        type: integer
+        format: int64
+        title: "tax_code"
+      type:
+        type: string
+        title: "type"
+      refundable:
+        type: string
+        title: "refundable"
+      price:
+        type: number
+        format: double
+        title: "price"
+      tax:
+        type: number
+        format: double
+        title: "tax"
+      amount:
+        type: number
+        format: double
+        title: "amount"
+    title: "Bill"
+    example:
+      name: "KFC Burger"
+      tax_code: 1
+      type: "Food & Beverage"
+      refundable: "Yes"
+      price: 5000
+      tax: 500
+      amount: 5500
+  Total:
+    type: object
+    properties:
+      price_subtotal:
+        type: number
+        format: double
+        title: "price_subtotal"
+      tax_subtotal:
+        type: number
+        format: double
+        title: "tax_subtotal"
+      grand_total:
+        type: number
+        format: double
+        title: "grand_total"
+    title: "Total"
+    example:
+      price_subtotal: 5000
+      tax_subtotal: 500
+      grand_total: 5500
+  BillResponse:
+    type: object
+    properties:
+      bill:
+        title: "bill"
+        type: array
+        items:
+          $ref: "#/definitions/Bill"
+      total:
+        title: "total"
+        type: object
+        $ref: "#/definitions/Total"
+    title: "BillResponse"
+    example:
+      bill:
+        - name: "KFC Burger"
+          tax_code: 1
+          type: "Food & Beverage"
+          refundable: "Yes"
+          price: 5000
+          tax: 500
+          amount: 5500
+      total:
+        price_subtotal: 5000
+        tax_subtotal: 500
+        grand_total: 5500
+  TaxObject:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        title: "id"
+      name:
+        type: string
+        title: "name"
+      tax_code:
+        type: integer
+        format: int64
+        title: "tax_code"
+      price:
+        type: number
+        format: double
+        title: "price"
+    title: "TaxObject"
+    example:
+      id: 0
+      name: "MACD Fresh Chicken"
+      tax_code: 1
+      price: 20000
