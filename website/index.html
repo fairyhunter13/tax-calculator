@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tax Calculator</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mb-4">
+        <form id="form-tax-object" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input name="name" type="text" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Enter the name of tax object">
+            </div>
+            <div class="form-group">
+                <label for="tax-code">Tax Code</label>
+                <input name="tax_code" type="number" class="form-control" id="tax-code" placeholder="Enter the tax code in here">
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input name="price" type="number" class="form-control" id="price" placeholder="Enter the price for the tax object in here">
+            </div>
+            <button id="submit-tax-object" type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <div class="container">
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Tax Code</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Refundable</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Tax</th>
+                        <th scope="col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="body-table">
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-6"></div>
+                    <div class="col-2">Price Subtotal</div>
+                    <div class="col-1">:</div>
+                    <div id="price-subtotal" class="col-3 text-right"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6"></div>
+                    <div class="col-2">Tax Subtotal</div>
+                    <div class="col-1">:</div>
+                    <div id="tax-subtotal" class="col-3 text-right"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6"></div>
+                    <div class="col-2">Grand Total</div>
+                    <div class="col-1">:</div>
+                    <div id="grand-total" class="col-3 text-right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+<script src="./js/jquery-3.3.1.min.js"></script>
+<script src="./js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function () {
+        reloadBill()
+        $('#submit-tax-object').on("click", function (event) {
+            event.preventDefault()
+            $.ajax({
+                method: "POST",
+                url: "/v1/tax",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({
+                    name: $('#name').val(),
+                    tax_code: parseInt($('#tax-code').val()),
+                    price: parseFloat($('#price').val())
+                }),
+                statusCode: {
+                    400: function () {
+                        alert("Invalid request in the form!")
+                    },
+                    500: function () {
+                        alert("Server is experiencing trouble!")
+                    }
+                },
+            }).done(function (data) {
+                alert("Success in creating the tax object!")
+                reloadBill()
+            })
+        })
+    })
+
+    function reloadBill() {
+        let tableRows = ""
+        let bodyTable = $("#body-table")
+        bodyTable.html(
+            $.ajax({
+                url: "/v1/bill"
+            }).done(function (data) {
+                if (data.bill.length > 0) {
+                    for (let bill of data.bill) {
+                        tableRows += "<tr>"
+                        tableRows += "<td>" + bill.name + "</td>"
+                        tableRows += "<td>" + bill.tax_code + "</td>"
+                        tableRows += "<td>" + bill.type + "</td>"
+                        tableRows += "<td>" + bill.refundable + "</td>"
+                        tableRows += "<td>" + bill.price + "</td>"
+                        tableRows += "<td>" + bill.tax + "</td>"
+                        tableRows += "<td>" + bill.amount + "</td>"
+                        tableRows += "</tr>"
+                    }
+                    bodyTable.html(tableRows)
+                    $('#price-subtotal').html(data.total.price_subtotal)
+                    $('#tax-subtotal').html(data.total.tax_subtotal)
+                    $('#grand-total').html(data.total.grand_total)
+                }
+            })
+
+        )
+    }
+</script>
+
+</html>
