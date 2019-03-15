@@ -2,6 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"sync"
+
+	"github.com/afex/hystrix-go/hystrix"
 
 	"github.com/fairyhunter13/tax-calculator/internal/taxobj"
 )
@@ -48,6 +51,30 @@ const (
 	`
 )
 
+const (
+	commandGetAll = `command_taxobj_GetAll`
+	commandCreate = `command_taxobj_Create`
+)
+
+var (
+	timeoutCircuitBreaker = 2000
+	errorPercentThreshold = 25
+	once                  = new(sync.Once)
+)
+
+func init() {
+	once.Do(func() {
+		hystrix.ConfigureCommand(commandGetAll, hystrix.CommandConfig{
+			Timeout:               timeoutCircuitBreaker,
+			ErrorPercentThreshold: errorPercentThreshold,
+		})
+		hystrix.ConfigureCommand(commandCreate, hystrix.CommandConfig{
+			Timeout:               timeoutCircuitBreaker,
+			ErrorPercentThreshold: errorPercentThreshold,
+		})
+	})
+}
+
 //NewPqRepository creates the pq repository for tax object with postgre connection.
 func NewPqRepository(pool *sql.DB) taxobj.Repository {
 	return &PqRepository{
@@ -58,6 +85,23 @@ func NewPqRepository(pool *sql.DB) taxobj.Repository {
 
 //GetAll return all tax objects in postgre.
 func (repo *PqRepository) GetAll() (taxObjects []taxobj.TaxObject, err error) {
+	const funcName = `[taxobj] [pq_repository] [GetAll]`
+	taxObjects = make([]taxobj.TaxObject, 0)
+	output := make(chan []taxobj.TaxObject, 1)
+	chanError := hystrix.Go(commandGetAll, func() (err error) {
+		defer close(output)
+		result, _ := repo.getAll()
+		output <- result
+		return
+	}, nil)
+	select {
+	case err = <-chanError:
+	case taxObjects = <-output:
+	}
+	return
+}
+
+func (repo *PqRepository) getAll() (taxObjects []taxobj.TaxObject, err error) {
 	var (
 		taxObject taxobj.TaxObject
 	)
@@ -98,6 +142,22 @@ func (repo *PqRepository) GetAll() (taxObjects []taxobj.TaxObject, err error) {
 
 //Create create a new tax object in the database.
 func (repo *PqRepository) Create(taxObj *taxobj.TaxObject) (err error) {
+	const funcName = `[taxobj] [pq_repository] [Create]`
+	output := make(chan bool, 1)
+	chanError := hystrix.Go(commandGetAll, func() (err error) {
+		defer close(output)
+		repo.create(taxObj)
+		output <- true
+		return
+	}, nil)
+	select {
+	case err = <-chanError:
+	case <-output:
+	}
+	return
+}
+
+func (repo *PqRepository) create(taxObj *taxobj.TaxObject) (err error) {
 	//Lazy init for preparing statement
 	if repo.statement.insert == nil {
 		stmt, err := repo.pool.Prepare(queryInsert)
